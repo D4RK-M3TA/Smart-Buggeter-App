@@ -1,3 +1,7 @@
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { authAPI, notificationsAPI, exportsAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +14,54 @@ import {
   Download, 
   Trash2,
   Mail,
-  Smartphone
+  Smartphone,
+  Loader2
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function SettingsPage() {
+  const { user, refreshUser } = useAuth();
+  const queryClient = useQueryClient();
+  const [profileData, setProfileData] = useState({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const { data: preferences, isLoading: prefsLoading } = useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: () => notificationsAPI.preferences(),
+  });
+
+  const handleSaveProfile = async () => {
+    setIsSaving(true);
+    try {
+      await authAPI.updateProfile(profileData);
+      toast.success('Profile updated successfully');
+      refreshUser();
+    } catch (error) {
+      toast.error('Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleExport = async (format: 'csv' | 'excel') => {
+    try {
+      const response = await exportsAPI.transactions({ format });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success('Export downloaded');
+    } catch (error) {
+      toast.error('Export failed');
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
@@ -33,18 +81,29 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
-              <Input id="firstName" defaultValue="John" />
+              <Input 
+                id="firstName" 
+                value={profileData.first_name}
+                onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
-              <Input id="lastName" defaultValue="Doe" />
+              <Input 
+                id="lastName" 
+                value={profileData.last_name}
+                onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
+              />
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue="john@example.com" />
+            <Input id="email" type="email" value={user?.email || ''} disabled />
           </div>
-          <Button>Save Changes</Button>
+          <Button onClick={handleSaveProfile} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            Save Changes
+          </Button>
         </div>
       </div>
 
