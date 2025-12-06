@@ -1,59 +1,79 @@
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { Upload, FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { transactionsAPI } from '@/services/api';
 
 type UploadStatus = 'idle' | 'uploading' | 'processing' | 'success' | 'error';
-
-interface ParsedTransaction {
-  date: string;
-  description: string;
-  amount: number;
-  suggestedCategory: string;
-  confidence: number;
-}
 
 export function CSVUploader() {
   const [status, setStatus] = useState<UploadStatus>('idle');
   const [progress, setProgress] = useState(0);
-  const [parsedData, setParsedData] = useState<ParsedTransaction[]>([]);
+  const [uploadId, setUploadId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const simulateUpload = async (file: File) => {
+  const handleUpload = async (file: File) => {
     setStatus('uploading');
-    
-    // Simulate upload progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(r => setTimeout(r, 100));
-      setProgress(i);
+    setProgress(0);
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      const response = await transactionsAPI.upload(file);
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (response.data.id) {
+        setUploadId(response.data.id);
+        setStatus('processing');
+        
+        // Poll for completion
+        const checkStatus = async () => {
+          try {
+            // In a real app, you'd poll the upload status endpoint
+            // For now, we'll wait a bit and then mark as success
+            setTimeout(() => {
+              setStatus('success');
+              queryClient.invalidateQueries({ queryKey: ['transactions'] });
+              toast.success('File uploaded successfully', {
+                description: `Processing ${response.data.transactions_count || 0} transactions.`,
+              });
+            }, 2000);
+          } catch (error) {
+            setStatus('error');
+            toast.error('Error checking upload status');
+          }
+        };
+
+        checkStatus();
+      } else {
+        setStatus('success');
+        toast.success('File uploaded successfully');
+      }
+    } catch (error: any) {
+      setStatus('error');
+      const errorMsg = error.response?.data?.error || 'Upload failed';
+      toast.error('Upload failed', { description: errorMsg });
     }
-
-    setStatus('processing');
-    await new Promise(r => setTimeout(r, 1500));
-
-    // Mock parsed data
-    const mockParsed: ParsedTransaction[] = [
-      { date: '2024-12-05', description: 'WHOLE FOODS MKT', amount: -127.43, suggestedCategory: 'Food & Dining', confidence: 0.94 },
-      { date: '2024-12-04', description: 'UBER TRIP', amount: -24.50, suggestedCategory: 'Transportation', confidence: 0.89 },
-      { date: '2024-12-04', description: 'AMZN MKTP US', amount: -89.99, suggestedCategory: 'Shopping', confidence: 0.78 },
-      { date: '2024-12-03', description: 'SHELL OIL', amount: -52.30, suggestedCategory: 'Transportation', confidence: 0.91 },
-      { date: '2024-12-03', description: 'PAYROLL DEPOSIT', amount: 4250.00, suggestedCategory: 'Income', confidence: 0.97 },
-    ];
-
-    setParsedData(mockParsed);
-    setStatus('success');
-    toast({
-      title: 'File processed successfully',
-      description: `${mockParsed.length} transactions parsed and categorized.`,
-    });
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
     if (file) {
-      simulateUpload(file);
+      handleUpload(file);
     }
   }, []);
 
@@ -68,10 +88,10 @@ export function CSVUploader() {
   const resetUploader = () => {
     setStatus('idle');
     setProgress(0);
-    setParsedData([]);
+    setUploadId(null);
   };
 
-  if (status === 'success' && parsedData.length > 0) {
+  if (status === 'success') {
     return (
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
