@@ -147,6 +147,22 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
+# Celery Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    'check-budget-thresholds': {
+        'task': 'notifications.tasks.check_budget_thresholds',
+        'schedule': 3600.0,  # Every hour
+    },
+    'check-recurring-payments': {
+        'task': 'notifications.tasks.check_recurring_payments',
+        'schedule': 86400.0,  # Daily
+    },
+    'check-large-transactions': {
+        'task': 'notifications.tasks.check_large_transactions',
+        'schedule': 86400.0,  # Daily
+    },
+}
+
 ML_MODEL_PATH = BASE_DIR / 'ml_models'
 TRANSACTION_CATEGORIES = [
     'groceries',
