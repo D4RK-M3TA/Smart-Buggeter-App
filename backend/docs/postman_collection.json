@@ -1,0 +1,384 @@
+{
+  "info": {
+    "name": "Smart Personal Budgeter API",
+    "description": "API collection for Smart Personal Budgeter application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"username\": \"user\",\n    \"password\": \"securepassword123\",\n    \"password_confirm\": \"securepassword123\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register/",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.tokens) {",
+                  "    pm.collectionVariables.set(\"accessToken\", jsonData.tokens.access);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"securepassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login/",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login", ""]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh\": \"your_refresh_token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh/",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile/",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile", ""]
+            }
+          }
+        },
+        {
+          "name": "MFA Setup",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/mfa/setup/",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "mfa", "setup", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "List Transactions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/?start_date=2024-01-01&end_date=2024-12-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", ""],
+              "query": [
+                {"key": "start_date", "value": "2024-01-01"},
+                {"key": "end_date", "value": "2024-12-31"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"date\": \"2024-12-01\",\n    \"description\": \"Grocery shopping\",\n    \"amount\": \"125.50\",\n    \"transaction_type\": \"debit\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions/",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", ""]
+            }
+          }
+        },
+        {
+          "name": "Get Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/summary/",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "summary", ""]
+            }
+          }
+        },
+        {
+          "name": "Upload Statement",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/transactions/upload/",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "upload", ""]
+            }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/transactions/categories/",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions", "categories", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Budgets",
+      "item": [
+        {
+          "name": "List Budgets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/",
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", ""]
+            }
+          }
+        },
+        {
+          "name": "Create Budget",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Monthly Groceries\",\n    \"amount\": 500,\n    \"period\": \"monthly\",\n    \"start_date\": \"2024-12-01\",\n    \"end_date\": \"2024-12-31\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/budgets/",
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", ""]
+            }
+          }
+        },
+        {
+          "name": "Budget Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/summary/",
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", "summary", ""]
+            }
+          }
+        },
+        {
+          "name": "Monthly Report",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/budgets/monthly-report/?year=2024&month=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["budgets", "monthly-report", ""],
+              "query": [
+                {"key": "year", "value": "2024"},
+                {"key": "month", "value": "12"}
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ML",
+      "item": [
+        {
+          "name": "Model Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ml/status/",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "status", ""]
+            }
+          }
+        },
+        {
+          "name": "Initialize Model",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ml/initialize/",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "initialize", ""]
+            }
+          }
+        },
+        {
+          "name": "Predict Categories",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"descriptions\": [\n        \"WALMART GROCERY\",\n        \"NETFLIX SUBSCRIPTION\",\n        \"UBER TRIP\"\n    ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/ml/predict/",
+              "host": ["{{baseUrl}}"],
+              "path": ["ml", "predict", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exports",
+      "item": [
+        {
+          "name": "Export CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/exports/transactions/csv/",
+              "host": ["{{baseUrl}}"],
+              "path": ["exports", "transactions", "csv", ""]
+            }
+          }
+        },
+        {
+          "name": "Export Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/exports/transactions/excel/",
+              "host": ["{{baseUrl}}"],
+              "path": ["exports", "transactions", "excel", ""]
+            }
+          }
+        },
+        {
+          "name": "Export Budget PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/exports/budget-report/pdf/?year=2024&month=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["exports", "budget-report", "pdf", ""],
+              "query": [
+                {"key": "year", "value": "2024"},
+                {"key": "month", "value": "12"}
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

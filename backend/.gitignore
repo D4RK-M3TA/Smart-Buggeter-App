@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pythonlibs/
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.env
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+*.pot
+*.pyc
+staticfiles/
+media/statements/*
+media/receipts/*
+!media/statements/.gitkeep
+!media/receipts/.gitkeep
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+frontend/dist/
+
+# ML models
+ml_models/*.joblib
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Lock files (keep in version control)
+# package-lock.json
+# uv.lock
