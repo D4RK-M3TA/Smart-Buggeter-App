@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { GroupExpense, mockGroupExpenses } from '@/lib/mock-data';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { billsplitAPI } from '@/services/api';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -13,23 +15,36 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Check, DollarSign, ArrowRight } from 'lucide-react';
+import { Plus, Users, Check, DollarSign, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
-export function BillSplitManager() {
-  const [expenses] = useState<GroupExpense[]>(mockGroupExpenses);
+interface BillSplitManagerProps {
+  groups?: any[];
+  expenses?: any[];
+}
 
-  // Calculate balances
+export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManagerProps) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
+
+  // Calculate balances for selected group
   const calculateBalance = () => {
+    if (!selectedGroup) {
+      return { youOwe: 0, owedToYou: 0, net: 0 };
+    }
+
+    const groupExpenses = expenses.filter((e: any) => e.group === selectedGroup);
     let youOwe = 0;
     let owedToYou = 0;
 
-    expenses.forEach((expense) => {
-      expense.participants.forEach((p) => {
-        if (p.name === 'You' && !p.paid && expense.paidBy !== 'You') {
-          youOwe += p.share;
+    groupExpenses.forEach((expense: any) => {
+      expense.shares?.forEach((share: any) => {
+        if (share.user_id === user?.id && !share.is_paid && expense.paid_by !== user?.id) {
+          youOwe += parseFloat(share.amount) || 0;
         }
-        if (expense.paidBy === 'You' && p.name !== 'You' && !p.paid) {
-          owedToYou += p.share;
+        if (expense.paid_by === user?.id && share.user_id !== user?.id && !share.is_paid) {
+          owedToYou += parseFloat(share.amount) || 0;
         }
       });
     });
