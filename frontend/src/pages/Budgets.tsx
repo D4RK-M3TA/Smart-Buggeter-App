@@ -1,7 +1,27 @@
-import { mockBudgets } from '@/lib/mock-data';
+import { useQuery } from '@tanstack/react-query';
+import { budgetsAPI, categoriesAPI } from '@/services/api';
 import { BudgetManager } from '@/components/budgets/BudgetManager';
+import { Loader2 } from 'lucide-react';
 
 export default function BudgetsPage() {
+  const { data: budgetsData, isLoading: budgetsLoading } = useQuery({
+    queryKey: ['budgets'],
+    queryFn: () => budgetsAPI.list(),
+  });
+
+  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => categoriesAPI.list(),
+  });
+
+  if (budgetsLoading || categoriesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -11,7 +31,10 @@ export default function BudgetsPage() {
         </p>
       </div>
 
-      <BudgetManager budgets={mockBudgets} />
+      <BudgetManager 
+        budgets={budgetsData?.data || []} 
+        categories={categoriesData?.data || []}
+      />
     </div>
   );
 }
