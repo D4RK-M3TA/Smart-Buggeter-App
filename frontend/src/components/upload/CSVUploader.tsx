@@ -100,9 +100,9 @@ export function CSVUploader() {
               <Check className="h-5 w-5 text-success" />
             </div>
             <div>
-              <h3 className="font-semibold">Transactions Parsed</h3>
+              <h3 className="font-semibold">File Uploaded Successfully</h3>
               <p className="text-sm text-muted-foreground">
-                {parsedData.length} transactions ready to import
+                Your statement is being processed. Transactions will appear shortly.
               </p>
             </div>
           </div>
@@ -110,47 +110,10 @@ export function CSVUploader() {
             Upload Another
           </Button>
         </div>
-
-        <div className="rounded-lg border bg-card overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Category</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {parsedData.map((tx, i) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-mono text-sm text-muted-foreground">
-                    {tx.date}
-                  </td>
-                  <td className="px-4 py-3 text-sm">{tx.description}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">{tx.suggestedCategory}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {Math.round(tx.confidence * 100)}%
-                      </span>
-                    </div>
-                  </td>
-                  <td className={cn(
-                    'px-4 py-3 text-right font-mono text-sm',
-                    tx.amount > 0 ? 'text-success' : 'text-foreground'
-                  )}>
-                    {tx.amount > 0 ? '+' : ''}${Math.abs(tx.amount).toFixed(2)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="flex justify-end gap-3">
-          <Button variant="outline">Review & Edit</Button>
-          <Button>Import All Transactions</Button>
+        <div className="rounded-lg border bg-card p-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            Check the Transactions page to see your imported transactions once processing is complete.
+          </p>
         </div>
       </div>
     );
