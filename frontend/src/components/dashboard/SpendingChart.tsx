@@ -1,13 +1,21 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { monthlySpendingData } from '@/lib/mock-data';
 
-export function SpendingChart() {
+interface SpendingChartProps {
+  data?: Array<{ category__name: string; total: number }>;
+}
+
+export function SpendingChart({ data = [] }: SpendingChartProps) {
+  const chartData = data.map((item) => ({
+    name: item.category__name || 'Other',
+    amount: parseFloat(item.total) || 0,
+  }));
+
   return (
     <div className="stat-card animate-slide-up">
-      <h3 className="font-semibold mb-4">Monthly Spending</h3>
+      <h3 className="font-semibold mb-4">Spending by Category</h3>
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={monthlySpendingData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorSpending" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(173, 58%, 39%)" stopOpacity={0.3} />
@@ -16,7 +24,7 @@ export function SpendingChart() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" vertical={false} />
             <XAxis 
-              dataKey="month" 
+              dataKey="name" 
               axisLine={false} 
               tickLine={false}
               tick={{ fill: 'hsl(215, 15%, 50%)', fontSize: 12 }}
