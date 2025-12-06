@@ -1,16 +1,37 @@
-import { mockRecurringPayments, categoryLabels, categoryColors } from '@/lib/mock-data';
+import { useQuery } from '@tanstack/react-query';
+import { recurringAPI } from '@/services/api';
 import { format, differenceInDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, RefreshCcw, Pause, Trash2 } from 'lucide-react';
+import { Calendar, RefreshCcw, Pause, Trash2, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function RecurringPage() {
-  const totalMonthly = mockRecurringPayments.reduce((sum, p) => sum + p.amount, 0);
+  const { data: recurringData, isLoading, refetch } = useQuery({
+    queryKey: ['recurring'],
+    queryFn: () => recurringAPI.list(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const payments = recurringData?.data || [];
+  const activePayments = payments.filter((p: any) => p.is_active);
+  const totalMonthly = activePayments.reduce((sum: number, p: any) => sum + (parseFloat(p.average_amount) || 0), 0);
   const totalYearly = totalMonthly * 12;
 
-  const sortedPayments = [...mockRecurringPayments].sort(
-    (a, b) => new Date(a.nextDate).getTime() - new Date(b.nextDate).getTime()
+  const sortedPayments = [...activePayments].sort(
+    (a: any, b: any) => {
+      const dateA = a.next_expected ? new Date(a.next_expected).getTime() : 0;
+      const dateB = b.next_expected ? new Date(b.next_expected).getTime() : 0;
+      return dateA - dateB;
+    }
   );
 
   return (
@@ -34,73 +55,107 @@ export default function RecurringPage() {
         </div>
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">Active Subscriptions</p>
-          <p className="text-2xl font-semibold">{mockRecurringPayments.length}</p>
+          <p className="text-2xl font-semibold">{activePayments.length}</p>
         </div>
       </div>
 
       {/* Payments List */}
       <div className="space-y-4">
-        {sortedPayments.map((payment) => {
-          const daysUntil = differenceInDays(new Date(payment.nextDate), new Date());
-          const isUpcoming = daysUntil <= 7 && daysUntil >= 0;
+        {sortedPayments.length === 0 ? (
+          <div className="stat-card text-center py-12">
+            <p className="text-muted-foreground">No recurring payments detected yet</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Recurring patterns will be detected automatically from your transactions
+            </p>
+          </div>
+        ) : (
+          sortedPayments.map((payment: any) => {
+            const nextDate = payment.next_expected || payment.last_occurrence;
+            if (!nextDate) return null;
+            
+            const daysUntil = differenceInDays(new Date(nextDate), new Date());
+            const isUpcoming = daysUntil <= 7 && daysUntil >= 0;
+            const amount = parseFloat(payment.average_amount) || 0;
 
-          return (
-            <div key={payment.id} className="stat-card animate-fade-in group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    'h-12 w-12 rounded-lg flex items-center justify-center',
-                    categoryColors[payment.category],
-                    'bg-opacity-20'
-                  )}>
-                    <RefreshCcw className="h-5 w-5 text-foreground/70" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium">{payment.merchant}</h4>
-                      {isUpcoming && (
-                        <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">
-                          Due soon
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span>{categoryLabels[payment.category]}</span>
-                      <span>•</span>
-                      <span className="capitalize">{payment.frequency}</span>
-                    </div>
-                  </div>
-                </div>
+            const handleToggle = async () => {
+              try {
+                await recurringAPI.update(payment.id, { is_active: !payment.is_active });
+                toast.success('Recurring payment updated');
+                refetch();
+              } catch (error) {
+                toast.error('Failed to update recurring payment');
+              }
+            };
 
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <p className="font-mono font-semibold">${payment.amount.toFixed(2)}</p>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Calendar className="h-3 w-3" />
-                      <span>
-                        {daysUntil === 0
-                          ? 'Due today'
-                          : daysUntil < 0
-                            ? 'Overdue'
-                            : `${format(new Date(payment.nextDate), 'MMM d')}`
-                        }
-                      </span>
+            const handleDelete = async () => {
+              try {
+                await recurringAPI.delete(payment.id);
+                toast.success('Recurring payment deleted');
+                refetch();
+              } catch (error) {
+                toast.error('Failed to delete recurring payment');
+              }
+            };
+
+            return (
+              <div key={payment.id} className="stat-card animate-fade-in group">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="h-12 w-12 rounded-lg flex items-center justify-center bg-primary/20"
+                      style={{ 
+                        backgroundColor: payment.category?.color ? `${payment.category.color}20` : undefined 
+                      }}
+                    >
+                      <RefreshCcw className="h-5 w-5 text-foreground/70" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{payment.merchant_name || payment.description_pattern}</h4>
+                        {isUpcoming && (
+                          <Badge variant="secondary" className="bg-warning/10 text-warning text-xs">
+                            Due soon
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{payment.category?.name || 'Uncategorized'}</span>
+                        <span>•</span>
+                        <span className="capitalize">{payment.frequency || 'monthly'}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Pause className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <div className="flex items-center gap-6">
+                    <div className="text-right">
+                      <p className="font-mono font-semibold">${amount.toFixed(2)}</p>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        <span>
+                          {daysUntil === 0
+                            ? 'Due today'
+                            : daysUntil < 0
+                              ? 'Overdue'
+                              : `${format(new Date(nextDate), 'MMM d')}`
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleToggle}>
+                        <Pause className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={handleDelete}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
     </div>
   );
