@@ -1,12 +1,41 @@
+import { useQuery } from '@tanstack/react-query';
+import { transactionsAPI } from '@/services/api';
 import { SpendingChart } from '@/components/dashboard/SpendingChart';
 import { CategoryPieChart } from '@/components/insights/CategoryPieChart';
 import { TopMerchants } from '@/components/insights/TopMerchants';
-import { mockTransactions, categorySpendingData } from '@/lib/mock-data';
+import { Loader2 } from 'lucide-react';
+import { format, subMonths } from 'date-fns';
 
 export default function InsightsPage() {
-  const totalSpent = categorySpendingData.reduce((sum, c) => sum + c.value, 0);
-  const avgTransaction = totalSpent / mockTransactions.filter(t => t.amount < 0).length;
-  const largestTransaction = Math.max(...mockTransactions.filter(t => t.amount < 0).map(t => Math.abs(t.amount)));
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const startDate = `${currentMonth}-01`;
+  const endDate = format(new Date(), 'yyyy-MM-dd');
+
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['transactions', 'summary', startDate, endDate],
+    queryFn: () => transactionsAPI.summary({ start_date: startDate, end_date: endDate }),
+  });
+
+  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', 'insights'],
+    queryFn: () => transactionsAPI.list({ start_date: startDate, end_date: endDate }),
+  });
+
+  if (summaryLoading || transactionsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const totalSpent = summary?.data?.total_expenses || 0;
+  const transactions = transactionsData?.data?.results || [];
+  const debitTransactions = transactions.filter((t: any) => t.transaction_type === 'debit');
+  const avgTransaction = debitTransactions.length > 0 ? totalSpent / debitTransactions.length : 0;
+  const largestTransaction = debitTransactions.length > 0 
+    ? Math.max(...debitTransactions.map((t: any) => Math.abs(parseFloat(t.amount) || 0)))
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -38,12 +67,12 @@ export default function InsightsPage() {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SpendingChart />
-        <CategoryPieChart />
+        <SpendingChart data={summary?.data?.by_category || []} />
+        <CategoryPieChart data={summary?.data?.by_category || []} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TopMerchants />
+        <TopMerchants transactions={transactions} />
         <div className="stat-card">
           <h3 className="font-semibold mb-4">Spending Tips</h3>
           <div className="space-y-3">
