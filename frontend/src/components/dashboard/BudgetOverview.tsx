@@ -1,6 +1,13 @@
 import { cn } from '@/lib/utils';
-import { Budget, categoryLabels, categoryColors } from '@/lib/mock-data';
 import { Progress } from '@/components/ui/progress';
+
+interface Budget {
+  id: string;
+  name: string;
+  amount: string;
+  spent?: number;
+  category?: { name: string; color?: string } | null;
+}
 
 interface BudgetOverviewProps {
   budgets: Budget[];
@@ -12,21 +19,28 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
       <h3 className="font-semibold mb-4">Budget Status</h3>
       <div className="space-y-4">
         {budgets.slice(0, 5).map((budget) => {
-          const percentage = Math.min((budget.spent / budget.limit) * 100, 100);
-          const isOverBudget = budget.spent > budget.limit;
+          const spent = budget.spent || 0;
+          const limit = parseFloat(budget.amount) || 0;
+          const percentage = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+          const isOverBudget = spent > limit;
           
           return (
-            <div key={budget.category} className="space-y-2">
+            <div key={budget.id} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <div className={cn('h-2 w-2 rounded-full', categoryColors[budget.category])} />
-                  <span className="text-foreground">{categoryLabels[budget.category]}</span>
+                  {budget.category?.color && (
+                    <div 
+                      className="h-2 w-2 rounded-full" 
+                      style={{ backgroundColor: budget.category.color }}
+                    />
+                  )}
+                  <span className="text-foreground">{budget.name}</span>
                 </div>
                 <span className={cn(
                   'font-mono text-xs',
                   isOverBudget ? 'text-destructive' : 'text-muted-foreground'
                 )}>
-                  ${budget.spent.toFixed(0)} / ${budget.limit}
+                  ${spent.toFixed(0)} / ${limit.toFixed(0)}
                 </span>
               </div>
               <Progress 

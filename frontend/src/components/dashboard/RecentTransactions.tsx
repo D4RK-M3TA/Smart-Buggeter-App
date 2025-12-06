@@ -1,7 +1,17 @@
 import { cn } from '@/lib/utils';
-import { Transaction, categoryLabels, categoryColors } from '@/lib/mock-data';
 import { format } from 'date-fns';
 import { RefreshCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  transaction_type: 'debit' | 'credit';
+  category?: { name: string; color?: string } | null;
+  is_recurring?: boolean;
+}
 
 interface RecentTransactionsProps {
   transactions: Transaction[];
@@ -12,46 +22,57 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     <div className="stat-card animate-slide-up">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold">Recent Transactions</h3>
-        <a href="/transactions" className="text-sm text-primary hover:underline">
+        <Link to="/transactions" className="text-sm text-primary hover:underline">
           View all
-        </a>
+        </Link>
       </div>
       <div className="space-y-3">
-        {transactions.slice(0, 5).map((transaction) => (
-          <div
-            key={transaction.id}
-            className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-          >
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                'h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium',
-                categoryColors[transaction.category],
-                'bg-opacity-20'
-              )}>
-                {transaction.merchant.charAt(0)}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground">
-                    {transaction.merchant}
-                  </p>
-                  {transaction.isRecurring && (
-                    <RefreshCcw className="h-3 w-3 text-muted-foreground" />
-                  )}
+        {transactions.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No transactions yet</p>
+        ) : (
+          transactions.slice(0, 5).map((transaction) => {
+            const amount = parseFloat(transaction.amount) || 0;
+            const isCredit = transaction.transaction_type === 'credit';
+            const displayAmount = isCredit ? amount : -amount;
+            
+            return (
+              <div
+                key={transaction.id}
+                className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+              >
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium bg-primary/20"
+                    style={{ 
+                      backgroundColor: transaction.category?.color ? `${transaction.category.color}20` : undefined 
+                    }}
+                  >
+                    {transaction.description.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">
+                        {transaction.description}
+                      </p>
+                      {transaction.is_recurring && (
+                        <RefreshCcw className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(transaction.date), 'MMM d')} • {transaction.category?.name || 'Uncategorized'}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {format(new Date(transaction.date), 'MMM d')} • {categoryLabels[transaction.category]}
-                </p>
+                <span className={cn(
+                  'font-mono text-sm font-medium',
+                  isCredit ? 'text-success' : 'text-foreground'
+                )}>
+                  {isCredit ? '+' : ''}${Math.abs(displayAmount).toFixed(2)}
+                </span>
               </div>
-            </div>
-            <span className={cn(
-              'font-mono text-sm font-medium',
-              transaction.amount > 0 ? 'text-success' : 'text-foreground'
-            )}>
-              {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toFixed(2)}
-            </span>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
     </div>
   );
