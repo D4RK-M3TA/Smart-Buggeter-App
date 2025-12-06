@@ -1,29 +1,61 @@
-import { 
-  mockTransactions, 
-  mockBudgets, 
-  mockRecurringPayments 
-} from '@/lib/mock-data';
+import { useQuery } from '@tanstack/react-query';
+import { transactionsAPI, budgetsAPI, recurringAPI } from '@/services/api';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { BudgetOverview } from '@/components/dashboard/BudgetOverview';
 import { RecentTransactions } from '@/components/dashboard/RecentTransactions';
 import { SpendingChart } from '@/components/dashboard/SpendingChart';
 import { UpcomingRecurring } from '@/components/dashboard/UpcomingRecurring';
-import { Wallet, TrendingDown, PiggyBank, RefreshCcw } from 'lucide-react';
+import { Wallet, TrendingDown, PiggyBank, RefreshCcw, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function Dashboard() {
-  const totalSpent = mockTransactions
-    .filter(t => t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const currentMonth = format(new Date(), 'yyyy-MM');
+  const startDate = `${currentMonth}-01`;
+  const endDate = format(new Date(), 'yyyy-MM-dd');
 
-  const totalIncome = mockTransactions
-    .filter(t => t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
+  // Fetch transactions summary
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['transactions', 'summary', startDate, endDate],
+    queryFn: () => transactionsAPI.summary({ start_date: startDate, end_date: endDate }),
+  });
 
-  const budgetUsed = mockBudgets.reduce((sum, b) => sum + b.spent, 0);
-  const budgetTotal = mockBudgets.reduce((sum, b) => sum + b.limit, 0);
-  const budgetPercentage = Math.round((budgetUsed / budgetTotal) * 100);
+  // Fetch recent transactions
+  const { data: transactionsData, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['transactions', 'recent'],
+    queryFn: () => transactionsAPI.list({ page: 1 }),
+  });
 
-  const recurringTotal = mockRecurringPayments.reduce((sum, p) => sum + p.amount, 0);
+  // Fetch budgets
+  const { data: budgetsData, isLoading: budgetsLoading } = useQuery({
+    queryKey: ['budgets'],
+    queryFn: () => budgetsAPI.list(),
+  });
+
+  // Fetch recurring payments
+  const { data: recurringData, isLoading: recurringLoading } = useQuery({
+    queryKey: ['recurring'],
+    queryFn: () => recurringAPI.list(),
+  });
+
+  if (summaryLoading || transactionsLoading || budgetsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  const totalSpent = summary?.data?.total_expenses || 0;
+  const totalIncome = summary?.data?.total_income || 0;
+  const transactions = transactionsData?.data?.results || [];
+  const budgets = budgetsData?.data || [];
+  const recurringPayments = recurringData?.data || [];
+
+  const budgetUsed = budgets.reduce((sum: number, b: any) => sum + (b.spent || 0), 0);
+  const budgetTotal = budgets.reduce((sum: number, b: any) => sum + (b.amount || 0), 0);
+  const budgetPercentage = budgetTotal > 0 ? Math.round((budgetUsed / budgetTotal) * 100) : 0;
+
+  const recurringTotal = recurringPayments.reduce((sum: number, p: any) => sum + (p.average_amount || 0), 0);
 
   return (
     <div className="space-y-8">
@@ -70,13 +102,13 @@ export default function Dashboard() {
 
       {/* Charts & Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SpendingChart />
-        <BudgetOverview budgets={mockBudgets} />
+        <SpendingChart data={summary?.data?.by_category || []} />
+        <BudgetOverview budgets={budgets} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentTransactions transactions={mockTransactions} />
-        <UpcomingRecurring payments={mockRecurringPayments} />
+        <RecentTransactions transactions={transactions.slice(0, 10)} />
+        <UpcomingRecurring payments={recurringPayments.filter((p: any) => p.is_active)} />
       </div>
     </div>
   );
