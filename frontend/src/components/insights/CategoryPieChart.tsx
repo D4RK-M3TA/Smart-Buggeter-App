@@ -1,8 +1,19 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
-import { categorySpendingData } from '@/lib/mock-data';
 
-export function CategoryPieChart() {
-  const total = categorySpendingData.reduce((sum, item) => sum + item.value, 0);
+interface CategoryPieChartProps {
+  data?: Array<{ category__name: string; total: number; category__color?: string }>;
+}
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
+
+export function CategoryPieChart({ data = [] }: CategoryPieChartProps) {
+  const chartData = data.map((item, index) => ({
+    name: item.category__name || 'Other',
+    value: parseFloat(item.total) || 0,
+    color: item.category__color || COLORS[index % COLORS.length],
+  }));
+
+  const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <div className="stat-card animate-slide-up">
@@ -11,7 +22,7 @@ export function CategoryPieChart() {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={categorySpendingData}
+              data={chartData}
               cx="50%"
               cy="50%"
               innerRadius={60}
@@ -19,7 +30,7 @@ export function CategoryPieChart() {
               paddingAngle={2}
               dataKey="value"
             >
-              {categorySpendingData.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>

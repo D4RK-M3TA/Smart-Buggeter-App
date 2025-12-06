@@ -1,12 +1,22 @@
-import { mockTransactions } from '@/lib/mock-data';
+interface Transaction {
+  id: string;
+  description: string;
+  amount: string;
+  transaction_type: 'debit' | 'credit';
+}
 
-export function TopMerchants() {
+interface TopMerchantsProps {
+  transactions?: Transaction[];
+}
+
+export function TopMerchants({ transactions = [] }: TopMerchantsProps) {
   // Calculate top merchants by total spend
-  const merchantSpending = mockTransactions
-    .filter(t => t.amount < 0)
+  const merchantSpending = transactions
+    .filter(t => t.transaction_type === 'debit')
     .reduce((acc, t) => {
-      const merchant = t.merchant;
-      acc[merchant] = (acc[merchant] || 0) + Math.abs(t.amount);
+      const merchant = t.description;
+      const amount = Math.abs(parseFloat(t.amount) || 0);
+      acc[merchant] = (acc[merchant] || 0) + amount;
       return acc;
     }, {} as Record<string, number>);
 
@@ -20,7 +30,10 @@ export function TopMerchants() {
     <div className="stat-card animate-slide-up">
       <h3 className="font-semibold mb-4">Top Merchants</h3>
       <div className="space-y-4">
-        {topMerchants.map(([merchant, amount], index) => (
+        {topMerchants.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No transaction data available</p>
+        ) : (
+          topMerchants.map(([merchant, amount], index) => (
           <div key={merchant} className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <div className="flex items-center gap-2">
@@ -36,7 +49,8 @@ export function TopMerchants() {
               />
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
