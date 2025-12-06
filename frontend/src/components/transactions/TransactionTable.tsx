@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Transaction, categoryLabels, categoryColors, Category } from '@/lib/mock-data';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { transactionsAPI } from '@/services/api';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import {
@@ -10,50 +11,59 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, RefreshCcw, Paperclip, Edit2, Download } from 'lucide-react';
+import { RefreshCcw, Paperclip, Edit2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  amount: string;
+  transaction_type: 'debit' | 'credit';
+  category?: { name: string; color?: string } | null;
+  is_recurring?: boolean;
+  notes?: string;
+  receipt?: string;
+}
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  onUpdate?: () => void;
 }
 
-export function TransactionTable({ transactions }: TransactionTableProps) {
-  const [search, setSearch] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+export function TransactionTable({ transactions, onUpdate }: TransactionTableProps) {
+  const queryClient = useQueryClient();
 
-  const filteredTransactions = transactions.filter((t) => {
-    const matchesSearch = t.merchant.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || t.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => transactionsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction updated');
+      onUpdate?.();
+    },
+    onError: () => {
+      toast.error('Failed to update transaction');
+    },
   });
 
-  const handleExport = () => {
-    const csv = [
-      ['Date', 'Merchant', 'Category', 'Amount', 'Notes'],
-      ...filteredTransactions.map(t => [
-        t.date,
-        t.merchant,
-        categoryLabels[t.category],
-        t.amount.toString(),
-        t.notes || ''
-      ])
-    ].map(row => row.join(',')).join('\n');
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => transactionsAPI.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction deleted');
+      onUpdate?.();
+    },
+    onError: () => {
+      toast.error('Failed to delete transaction');
+    },
+  });
 
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'transactions.csv';
-    a.click();
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this transaction?')) {
+      deleteMutation.mutate(id);
+    }
   };
 
   return (
