@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Budget, categoryLabels, categoryColors, Category } from '@/lib/mock-data';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { budgetsAPI } from '@/services/api';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -12,20 +13,61 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Edit2, AlertTriangle, Check } from 'lucide-react';
+import { Edit2, AlertTriangle, Check, Plus, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
+
+interface Budget {
+  id: string;
+  name: string;
+  amount: string;
+  spent?: number;
+  category?: { name: string; color?: string; id: string } | null;
+  period: string;
+  start_date: string;
+  end_date: string;
+  is_active: boolean;
+}
 
 interface BudgetManagerProps {
   budgets: Budget[];
-  onUpdateBudget?: (category: Category, limit: number) => void;
+  categories?: any[];
 }
 
-export function BudgetManager({ budgets, onUpdateBudget }: BudgetManagerProps) {
+export function BudgetManager({ budgets, categories = [] }: BudgetManagerProps) {
+  const queryClient = useQueryClient();
   const [editingBudget, setEditingBudget] = useState<Budget | null>(null);
   const [newLimit, setNewLimit] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
-  const totalBudget = budgets.reduce((sum, b) => sum + b.limit, 0);
-  const totalSpent = budgets.reduce((sum, b) => sum + b.spent, 0);
+  const totalBudget = budgets.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+  const totalSpent = budgets.reduce((sum, b) => sum + (b.spent || 0), 0);
   const remaining = totalBudget - totalSpent;
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => budgetsAPI.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      toast.success('Budget created');
+      setIsCreating(false);
+    },
+    onError: () => {
+      toast.error('Failed to create budget');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => budgetsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      toast.success('Budget updated');
+      setEditingBudget(null);
+      setNewLimit('');
+    },
+    onError: () => {
+      toast.error('Failed to update budget');
+    },
+  });
 
   const handleSave = () => {
     if (editingBudget && newLimit) {
