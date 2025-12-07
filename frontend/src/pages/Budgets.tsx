@@ -32,8 +32,8 @@ export default function BudgetsPage() {
       </div>
 
       <BudgetManager 
-        budgets={budgetsData?.data || []} 
-        categories={categoriesData?.data || []}
+        budgets={Array.isArray(budgetsData?.data?.results) ? budgetsData.data.results : []} 
+        categories={Array.isArray(categoriesData?.data?.results) ? categoriesData.data.results : []}
       />
     </div>
   );
