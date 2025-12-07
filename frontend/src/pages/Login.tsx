@@ -27,7 +27,7 @@ export default function LoginPage() {
     try {
       await login(email, password, mfaRequired ? otpCode : undefined);
       toast.success('Logged in successfully');
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       if (err.message === 'MFA_REQUIRED') {
         setMfaRequired(true);
