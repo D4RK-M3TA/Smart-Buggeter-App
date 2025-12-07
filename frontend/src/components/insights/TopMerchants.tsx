@@ -1,3 +1,5 @@
+import { useCurrency } from '@/contexts/CurrencyContext';
+
 interface Transaction {
   id: string;
   description: string;
@@ -10,6 +12,7 @@ interface TopMerchantsProps {
 }
 
 export function TopMerchants({ transactions = [] }: TopMerchantsProps) {
+  const { formatCurrency } = useCurrency();
   // Calculate top merchants by total spend
   const merchantSpending = transactions
     .filter(t => t.transaction_type === 'debit')
@@ -40,7 +43,7 @@ export function TopMerchants({ transactions = [] }: TopMerchantsProps) {
                 <span className="text-muted-foreground w-4">{index + 1}.</span>
                 <span className="font-medium">{merchant}</span>
               </div>
-              <span className="font-mono">${amount.toFixed(2)}</span>
+              <span className="font-mono">{formatCurrency(amount)}</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div

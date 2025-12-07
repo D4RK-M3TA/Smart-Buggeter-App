@@ -1,4 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface CategoryPieChartProps {
   data?: Array<{ category__name: string; total: number; category__color?: string }>;
@@ -7,6 +8,7 @@ interface CategoryPieChartProps {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
 export function CategoryPieChart({ data = [] }: CategoryPieChartProps) {
+  const { formatCurrency } = useCurrency();
   const chartData = data.map((item, index) => ({
     name: item.category__name || 'Other',
     value: parseFloat(item.total) || 0,
@@ -42,7 +44,7 @@ export function CategoryPieChart({ data = [] }: CategoryPieChartProps) {
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
               formatter={(value: number) => [
-                `$${value.toFixed(2)} (${((value / total) * 100).toFixed(1)}%)`,
+                `${formatCurrency(value)} (${((value / total) * 100).toFixed(1)}%)`,
                 'Spent'
               ]}
             />
