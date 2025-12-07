@@ -23,7 +23,7 @@ class User(AbstractUser):
 
 class UserPreferences(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='preferences')
-    default_currency = models.CharField(max_length=3, default='USD')
+    default_currency = models.CharField(max_length=3, default='ZAR')
     notification_enabled = models.BooleanField(default=True)
     budget_alert_threshold = models.DecimalField(max_digits=5, decimal_places=2, default=80.00)
     created_at = models.DateTimeField(auto_now_add=True)
