@@ -17,6 +17,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Users, Check, DollarSign, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface BillSplitManagerProps {
   groups?: any[];
@@ -26,6 +27,7 @@ interface BillSplitManagerProps {
 export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManagerProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { formatCurrency, formatCurrencyWithSign } = useCurrency();
   const [selectedGroup, setSelectedGroup] = useState<string>('');
 
   // Calculate balances for selected group
@@ -61,13 +63,13 @@ export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManage
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">You Owe</p>
           <p className="text-2xl font-semibold text-destructive">
-            ${youOwe.toFixed(2)}
+            {formatCurrency(youOwe)}
           </p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">Owed to You</p>
           <p className="text-2xl font-semibold text-success">
-            ${owedToYou.toFixed(2)}
+            {formatCurrency(owedToYou)}
           </p>
         </div>
         <div className="stat-card">
@@ -76,7 +78,7 @@ export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManage
             'text-2xl font-semibold',
             net >= 0 ? 'text-success' : 'text-destructive'
           )}>
-            {net >= 0 ? '+' : ''}${net.toFixed(2)}
+            {formatCurrencyWithSign(net, net >= 0)}
           </p>
         </div>
       </div>
@@ -132,7 +134,7 @@ export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManage
                 </p>
               </div>
               <span className="text-xl font-semibold font-mono">
-                ${expense.amount.toFixed(2)}
+                {formatCurrency(expense.amount)}
               </span>
             </div>
 
@@ -149,7 +151,7 @@ export function BillSplitManager({ groups = [], expenses = [] }: BillSplitManage
                     <span className="text-sm font-medium">{p.name}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm">${p.share.toFixed(2)}</span>
+                    <span className="font-mono text-sm">{formatCurrency(p.share)}</span>
                     {p.paid ? (
                       <Badge variant="secondary" className="bg-success/10 text-success">
                         <Check className="h-3 w-3 mr-1" />
