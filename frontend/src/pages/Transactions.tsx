@@ -49,25 +49,25 @@ export default function TransactionsPage() {
           value={filters.search}
           onChange={(e) => handleFilterChange('search', e.target.value)}
         />
-        <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+        <Select value={filters.category || 'all'} onValueChange={(value) => handleFilterChange('category', value === 'all' ? '' : value)}>
           <SelectTrigger>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Categories</SelectItem>
-            {categoriesData?.data?.map((cat: any) => (
+            <SelectItem value="all">All Categories</SelectItem>
+            {(categoriesData?.data?.results || []).map((cat: any) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        <Select value={filters.transaction_type} onValueChange={(value) => handleFilterChange('transaction_type', value)}>
+        <Select value={filters.transaction_type || 'all'} onValueChange={(value) => handleFilterChange('transaction_type', value === 'all' ? '' : value)}>
           <SelectTrigger>
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
             <SelectItem value="debit">Debit</SelectItem>
             <SelectItem value="credit">Credit</SelectItem>
           </SelectContent>
