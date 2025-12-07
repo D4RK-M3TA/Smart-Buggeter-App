@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, RefreshCcw, Pause, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export default function RecurringPage() {
+  const { formatCurrency } = useCurrency();
   const { data: recurringData, isLoading, refetch } = useQuery({
     queryKey: ['recurring'],
     queryFn: () => recurringAPI.list(),
@@ -21,18 +23,18 @@ export default function RecurringPage() {
     );
   }
 
-  const payments = recurringData?.data || [];
-  const activePayments = payments.filter((p: any) => p.is_active);
-  const totalMonthly = activePayments.reduce((sum: number, p: any) => sum + (parseFloat(p.average_amount) || 0), 0);
+  const payments = Array.isArray(recurringData?.data?.results) ? recurringData.data.results : [];
+  const activePayments = Array.isArray(payments) ? payments.filter((p: any) => p.is_active !== false) : [];
+  const totalMonthly = activePayments.reduce((sum: number, p: any) => sum + (parseFloat(p.average_amount || 0) || 0), 0);
   const totalYearly = totalMonthly * 12;
 
-  const sortedPayments = [...activePayments].sort(
+  const sortedPayments = Array.isArray(activePayments) ? [...activePayments].sort(
     (a: any, b: any) => {
       const dateA = a.next_expected ? new Date(a.next_expected).getTime() : 0;
       const dateB = b.next_expected ? new Date(b.next_expected).getTime() : 0;
       return dateA - dateB;
     }
-  );
+  ) : [];
 
   return (
     <div className="space-y-6">
@@ -47,11 +49,11 @@ export default function RecurringPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">Monthly Total</p>
-          <p className="text-2xl font-semibold">${totalMonthly.toFixed(2)}</p>
+          <p className="text-2xl font-semibold">{formatCurrency(totalMonthly)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">Yearly Total</p>
-          <p className="text-2xl font-semibold">${totalYearly.toFixed(2)}</p>
+          <p className="text-2xl font-semibold">{formatCurrency(totalYearly)}</p>
         </div>
         <div className="stat-card">
           <p className="text-sm text-muted-foreground">Active Subscriptions</p>
@@ -128,7 +130,7 @@ export default function RecurringPage() {
 
                   <div className="flex items-center gap-6">
                     <div className="text-right">
-                      <p className="font-mono font-semibold">${amount.toFixed(2)}</p>
+                      <p className="font-mono font-semibold">{formatCurrency(amount)}</p>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         <span>
