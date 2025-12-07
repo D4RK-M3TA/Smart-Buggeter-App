@@ -25,7 +25,7 @@ interface SidebarProps {
 }
 
 const mainNavItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/transactions', icon: Receipt, label: 'Transactions' },
   { to: '/upload', icon: Upload, label: 'Upload CSV' },
   { to: '/budgets', icon: PiggyBank, label: 'Budgets' },
