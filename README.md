@@ -2,6 +2,18 @@
 
 A full-stack personal finance application with ML-powered transaction categorization, budget management, and optional bill-splitting features.
 
+## Screenshots
+
+<div align="center">
+  <img src="screenshots/Screenshot 2025-12-08 at 00-26-02 SmartBudget - Personal Finance Manager.png" alt="SmartBudget Dashboard" width="800"/>
+  <p><em>Dashboard Overview</em></p>
+</div>
+
+<div align="center">
+  <img src="screenshots/Screenshot 2025-12-08 at 00-27-16 SmartBudget - Personal Finance Manager.png" alt="SmartBudget Interface" width="800"/>
+  <p><em>Application Interface</em></p>
+</div>
+
 ## Features
 
 ### Core Features
@@ -82,7 +94,7 @@ docker-compose exec backend python -c "from ml_engine.classifier import train_in
 ```
 
 ### 5. Access the application
-- Frontend: http://localhost:3000
+- Frontend: http://localhost:8080
 - Backend API: http://localhost:8000
 - API Documentation: http://localhost:8000/api/docs/
 - Admin Panel: http://localhost:8000/admin/
