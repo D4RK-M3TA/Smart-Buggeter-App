@@ -1,10 +1,13 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface SpendingChartProps {
   data?: Array<{ category__name: string; total: number }>;
 }
 
 export function SpendingChart({ data = [] }: SpendingChartProps) {
+  const { getCurrencySymbol } = useCurrency();
+  const symbol = getCurrencySymbol();
   const chartData = data.map((item) => ({
     name: item.category__name || 'Other',
     amount: parseFloat(item.total) || 0,
@@ -33,7 +36,7 @@ export function SpendingChart({ data = [] }: SpendingChartProps) {
               axisLine={false} 
               tickLine={false}
               tick={{ fill: 'hsl(215, 15%, 50%)', fontSize: 12 }}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `${symbol}${value.toFixed(0)}`}
             />
             <Tooltip 
               contentStyle={{
@@ -42,7 +45,7 @@ export function SpendingChart({ data = [] }: SpendingChartProps) {
                 borderRadius: '8px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
-              formatter={(value: number) => [`$${value}`, 'Spent']}
+              formatter={(value: number) => [`${symbol}${value.toFixed(2)}`, 'Spent']}
             />
             <Area
               type="monotone"

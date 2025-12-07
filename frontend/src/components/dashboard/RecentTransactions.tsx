@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { RefreshCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { formatCurrencyWithSign } from '@/lib/currency';
 
 interface Transaction {
   id: string;
@@ -18,6 +20,8 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
+  const { currency } = useCurrency();
+  
   return (
     <div className="stat-card animate-slide-up">
       <div className="flex items-center justify-between mb-4">
@@ -67,7 +71,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   'font-mono text-sm font-medium',
                   isCredit ? 'text-success' : 'text-foreground'
                 )}>
-                  {isCredit ? '+' : ''}${Math.abs(displayAmount).toFixed(2)}
+                  {formatCurrencyWithSign(displayAmount, isCredit, currency)}
                 </span>
               </div>
             );

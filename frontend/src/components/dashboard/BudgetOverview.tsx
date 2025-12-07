@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Budget {
   id: string;
@@ -14,6 +15,8 @@ interface BudgetOverviewProps {
 }
 
 export function BudgetOverview({ budgets }: BudgetOverviewProps) {
+  const { formatCurrency } = useCurrency();
+  
   return (
     <div className="stat-card animate-slide-up">
       <h3 className="font-semibold mb-4">Budget Status</h3>
@@ -40,7 +43,7 @@ export function BudgetOverview({ budgets }: BudgetOverviewProps) {
                   'font-mono text-xs',
                   isOverBudget ? 'text-destructive' : 'text-muted-foreground'
                 )}>
-                  ${spent.toFixed(0)} / ${limit.toFixed(0)}
+                  {formatCurrency(spent)} / {formatCurrency(limit)}
                 </span>
               </div>
               <Progress 

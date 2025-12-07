@@ -1,6 +1,7 @@
 import { format, differenceInDays } from 'date-fns';
 import { Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface RecurringPayment {
   id: string;
@@ -18,6 +19,7 @@ interface UpcomingRecurringProps {
 }
 
 export function UpcomingRecurring({ payments }: UpcomingRecurringProps) {
+  const { formatCurrency } = useCurrency();
   const sortedPayments = [...payments]
     .filter(p => p.next_expected && p.is_active)
     .sort(
@@ -70,7 +72,7 @@ export function UpcomingRecurring({ payments }: UpcomingRecurringProps) {
                 </div>
                 <div className="text-right">
                   <span className="font-mono text-sm font-medium text-foreground">
-                    ${amount.toFixed(2)}
+                    {formatCurrency(amount)}
                   </span>
                   <p className="text-xs text-muted-foreground">
                     {format(new Date(payment.next_expected!), 'MMM d')}
