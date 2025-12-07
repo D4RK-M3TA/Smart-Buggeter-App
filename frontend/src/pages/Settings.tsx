@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { authAPI, notificationsAPI, exportsAPI } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   User, 
   Bell, 
@@ -21,6 +23,7 @@ import { toast } from 'sonner';
 
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
+  const { currency, setCurrency } = useCurrency();
   const queryClient = useQueryClient();
   const [profileData, setProfileData] = useState({
     first_name: user?.first_name || '',
@@ -104,6 +107,35 @@ export default function SettingsPage() {
             {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
             Save Changes
           </Button>
+        </div>
+      </div>
+
+      {/* Currency */}
+      <div className="stat-card">
+        <div className="flex items-center gap-3 mb-4">
+          <Download className="h-5 w-5 text-muted-foreground" />
+          <h3 className="font-semibold">Currency</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currency">Default Currency</Label>
+            <Select value={currency} onValueChange={setCurrency}>
+              <SelectTrigger id="currency">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ZAR">ZAR - South African Rand (R)</SelectItem>
+                <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                <SelectItem value="AUD">AUD - Australian Dollar (A$)</SelectItem>
+                <SelectItem value="CAD">CAD - Canadian Dollar (C$)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Currency is automatically detected from your location, but you can change it here
+            </p>
+          </div>
         </div>
       </div>
 
