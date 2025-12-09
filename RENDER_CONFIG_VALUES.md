@@ -9,7 +9,7 @@ Fill in these values on the Render configuration screen:
 | **Language** | `Docker` (already selected) |
 | **Branch** | `main` (already selected) |
 | **Region** | `Virginia (US East)` (or your preferred region) |
-| **Root Directory** | `backend` |
+| **Root Directory** | (leave empty - use repo root) |
 | **Dockerfile Path** | `Dockerfile` (without `./` - just `Dockerfile`) |
 
 ---
