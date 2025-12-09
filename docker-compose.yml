@@ -32,7 +32,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     container_name: smart_budgeter_backend
     command: >
       sh -c "python manage.py migrate &&
@@ -80,7 +80,7 @@ services:
   celery:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.local
     container_name: smart_budgeter_celery
     command: celery -A budgeter worker --loglevel=info --concurrency=4
     volumes:

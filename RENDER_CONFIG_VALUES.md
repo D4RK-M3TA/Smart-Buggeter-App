@@ -9,7 +9,7 @@ Fill in these values on the Render configuration screen:
 | **Language** | `Docker` (already selected) |
 | **Branch** | `main` (already selected) |
 | **Region** | `Virginia (US East)` (or your preferred region) |
-| **Root Directory** | (leave empty - use repo root) |
+| **Root Directory** | `backend` |
 | **Dockerfile Path** | `Dockerfile` (without `./` - just `Dockerfile`) |
 
 ---
@@ -62,7 +62,7 @@ PGPORT=<copy-from-render-postgres-details>
 
 ## 📋 Quick Checklist
 
-- [ ] Set Root Directory: (leave empty - use repo root)
+- [ ] Set Root Directory: `backend`
 - [ ] Set Dockerfile Path: `Dockerfile` (without `./`)
 - [ ] Create PostgreSQL database in Render
 - [ ] Copy all 5 database environment variables (PGDATABASE, PGUSER, PGPASSWORD, PGHOST, PGPORT)
