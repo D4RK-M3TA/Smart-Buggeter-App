@@ -94,11 +94,11 @@ PGPORT=<copy-from-render-postgres-details>
 
 If you see the error `"/requirements.txt": not found`:
 
-**Solution**: A root-level Dockerfile has been created. Use these settings:
-- **Root Directory**: (leave empty)
+**Solution**: Use these settings:
+- **Root Directory**: `backend`
 - **Dockerfile Path**: `Dockerfile`
 
-This Dockerfile properly handles the monorepo structure by copying from `backend/` directory.
+The `backend/Dockerfile` works when Root Directory is set to `backend` because the build context will be the backend directory.
 
 ---
 
