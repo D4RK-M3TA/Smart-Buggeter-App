@@ -197,3 +197,7 @@ Your backend should be accessible via HTTPS (e.g., `https://your-api.railway.app
 - Ensure database migrations have run
 - Check that `ALLOWED_HOSTS` includes your domain
 
+
+
+
+
